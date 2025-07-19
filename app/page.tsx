@@ -381,12 +381,12 @@ export default function WeddingRSVP() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="message">Special Message (Optional)</Label>
+                    <Label htmlFor="message">If you play this song we'll dance</Label>
                     <Textarea
                       id="message"
                       value={rsvpData.message}
                       onChange={(e) => setRSVPData({ ...rsvpData, message: e.target.value })}
-                      placeholder="Share your excitement or any special requests..."
+                      placeholder="Enter your song request..."
                       className="border-gray-200 focus:border-lime-500 focus:ring-lime-500 min-h-[100px]"
                     />
                   </div>

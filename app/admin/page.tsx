@@ -43,9 +43,9 @@ export default function AdminDashboard() {
       guest.qrCode.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
-  const totalGuests = guests.reduce((sum, guest) => sum + Number.parseInt(guest.guests), 0)
+  const totalGuests = guests.reduce((sum, guest) => sum + Number.parseInt(guest.guests || '1'), 0)
   const checkedInGuests = guests.filter((guest) => guest.checkedIn)
-  const totalCheckedIn = checkedInGuests.reduce((sum, guest) => sum + Number.parseInt(guest.guests), 0)
+  const totalCheckedIn = checkedInGuests.reduce((sum, guest) => sum + Number.parseInt(guest.guests || '1'), 0)
 
   const handleQRScan = (qrCode: string) => {
     const result = SimpleDB.checkInGuest(qrCode)
@@ -110,10 +110,10 @@ export default function AdminDashboard() {
             <Button 
               variant="outline" 
               className="flex items-center gap-2" 
-              onClick={() => router.push("/admin/sheets")}
+              onClick={() => router.push("/admin/guest-list")}
             >
-              <span className="w-4 h-4">📊</span>
-              Sheets
+              <span className="w-4 h-4">📃</span>
+              Guest List
             </Button>
             <Button 
               variant="outline" 
@@ -238,7 +238,7 @@ export default function AdminDashboard() {
                                   <strong>Phone:</strong> {guest.phone || "Not provided"}
                                 </p>
                                 <p>
-                                  <strong>Guests:</strong> {guest.guests}
+                                  <strong>Guests:</strong> {guest.guests || '1'}
                                 </p>
                               </div>
                               <div>
@@ -356,7 +356,7 @@ export default function AdminDashboard() {
                                 <strong>Guest:</strong> {scanResult.guest.name}
                               </p>
                               <p>
-                                <strong>Party Size:</strong> {scanResult.guest.guests} guest(s)
+                                <strong>Party Size:</strong> {scanResult.guest.guests || '1'} guest(s)
                               </p>
                               <p>
                                 <strong>Email:</strong> {scanResult.guest.email}

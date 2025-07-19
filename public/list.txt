@@ -1,0 +1,2 @@
+# Wedding RSVP Guest List
+# Format: Name, Email, Phone, Message, QR Code, Check-in Status, Check-in Time, RSVP Date

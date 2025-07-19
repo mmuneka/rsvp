@@ -83,7 +83,7 @@ export class SimpleDB {
     return {
       success: true,
       guest: updatedGuest!,
-      message: `Welcome ${guest.name}! Successfully checked in ${guest.guests} guest(s)`,
+      message: `Welcome ${guest.name}! Successfully checked in ${guest.guests || '1'} guest(s)`,
     }
   }
 
@@ -103,7 +103,7 @@ export class SimpleDB {
       lines.push(`Name: ${guest.name}`)
       lines.push(`Email: ${guest.email}`)
       lines.push(`Phone: ${guest.phone}`)
-      lines.push(`Guests: ${guest.guests}`)
+      lines.push(`Guests: ${guest.guests || '1'}`)
       lines.push(`QR Code: ${guest.qrCode}`)
       lines.push(`Checked In: ${guest.checkedIn ? "Yes" : "No"}`)
       if (guest.checkedIn && guest.checkedInAt) {
