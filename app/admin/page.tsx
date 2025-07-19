@@ -1,14 +1,17 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Users, Search, QrCode, CheckCircle, XCircle, Clock, Download, UserCheck, Camera } from "lucide-react"
+import { Users, Search, QrCode, CheckCircle, XCircle, Clock, Download, UserCheck, Camera, LogOut } from "lucide-react"
 import { SimpleDB, type Guest } from "@/lib/db"
 import { QRScanner } from "@/components/qr-scanner"
+import { useAuth } from "@/lib/auth"
+import { RouteGuard } from "@/components/route-guard"
 
 export default function AdminDashboard() {
   const [guests, setGuests] = useState<Guest[]>([])
@@ -16,6 +19,8 @@ export default function AdminDashboard() {
   const [scannerInput, setScannerInput] = useState("")
   const [scanResult, setScanResult] = useState<{ success: boolean; guest?: Guest; message: string } | null>(null)
   const [showCamera, setShowCamera] = useState(false)
+  const { logout } = useAuth()
+  const router = useRouter()
 
   // Load guests from database
   useEffect(() => {
@@ -92,12 +97,36 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-lime-50 to-emerald-50 p-4">
-      <div className="container mx-auto max-w-6xl">
+    <RouteGuard>
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-lime-50 to-emerald-50 p-4">
+        <div className="container mx-auto max-w-6xl">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-serif text-gray-800 mb-2 tracking-wide">Wedding Admin Dashboard</h1>
-          <p className="text-gray-600">Yvonne & Steve's Wedding - 24th August 2025</p>
+        <div className="flex justify-between items-center mb-8">
+          <div className="text-center flex-1">
+            <h1 className="text-4xl font-serif text-gray-800 mb-2 tracking-wide">Wedding Admin Dashboard</h1>
+            <p className="text-gray-600">Yvonne & Steve's Wedding - 24th August 2025</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2" 
+              onClick={() => router.push("/admin/sheets")}
+            >
+              <span className="w-4 h-4">📊</span>
+              Sheets
+            </Button>
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2" 
+              onClick={() => {
+                logout();
+                router.push("/admin/login");
+              }}
+            >
+              <LogOut className="w-4 h-4" />
+              Logout
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -381,7 +410,8 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
         </Tabs>
+        </div>
       </div>
-    </div>
+    </RouteGuard>
   )
 }

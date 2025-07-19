@@ -5,8 +5,8 @@ export interface Guest {
   name: string
   email: string
   phone: string
-  guests: string
-  dietaryRestrictions: string
+  guests?: string
+  dietaryRestrictions?: string
   message: string
   qrCode: string
   checkedIn: boolean
@@ -36,6 +36,7 @@ export class SimpleDB {
       id: Date.now().toString(),
       checkedIn: false,
       rsvpDate: new Date().toISOString(),
+      guests: "1", // Default to 1 guest since we removed the field
     }
 
     guests.push(newGuest)

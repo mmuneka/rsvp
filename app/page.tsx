@@ -12,13 +12,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar, MapPin, Users, Download, Check, Settings, Leaf } from "lucide-react"
 import Link from "next/link"
 import { SimpleDB } from "@/lib/db"
+import { saveGuestToSheet } from "@/lib/sheets"
 
 interface RSVPData {
   name: string
   email: string
   phone: string
-  guests: string
-  dietaryRestrictions: string
   message: string
 }
 
@@ -28,8 +27,6 @@ export default function WeddingRSVP() {
     name: "",
     email: "",
     phone: "",
-    guests: "1",
-    dietaryRestrictions: "",
     message: "",
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -39,21 +36,35 @@ export default function WeddingRSVP() {
     e.preventDefault()
     setIsSubmitting(true)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    try {
+      // Generate QR code data
+      const qrData = `WEDDING-RSVP-${Date.now()}-${rsvpData.name.replace(/\s+/g, "")}`
+      setQrCode(qrData)
 
-    // Generate QR code data
-    const qrData = `WEDDING-RSVP-${Date.now()}-${rsvpData.name.replace(/\s+/g, "")}`
-    setQrCode(qrData)
+      // Save to local database
+      const savedGuest = SimpleDB.saveGuest({
+        ...rsvpData,
+        qrCode: qrData,
+      })
 
-    // Save to database
-    SimpleDB.saveGuest({
-      ...rsvpData,
-      qrCode: qrData,
-    })
-
-    setIsSubmitting(false)
-    setCurrentStep("confirmation")
+      try {
+        // Save to Google Sheet
+        const sheetSaved = await saveGuestToSheet(savedGuest)
+        if (!sheetSaved) {
+          console.warn('Failed to save to Google Sheet, but local save succeeded')
+        }
+      } catch (sheetError) {
+        console.error("Error saving to Google Sheet:", sheetError)
+        // Continue even if Google Sheets save fails
+      }
+      
+      setCurrentStep("confirmation")
+    } catch (error) {
+      console.error("Error saving RSVP:", error)
+      alert("There was an error saving your RSVP. Please try again.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const downloadQRCode = () => {
@@ -148,9 +159,8 @@ export default function WeddingRSVP() {
       ctx.font = "16px sans-serif"
       ctx.fillStyle = "#374151"
       ctx.fillText(`Name: ${rsvpData.name}`, 300, 620)
-      ctx.fillText(`Guests: ${rsvpData.guests}`, 300, 645)
       if (rsvpData.phone) {
-        ctx.fillText(`Phone: ${rsvpData.phone}`, 300, 670)
+        ctx.fillText(`Phone: ${rsvpData.phone}`, 300, 645)
       }
 
       // QR Code section
@@ -358,44 +368,14 @@ export default function WeddingRSVP() {
                     </div>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number</Label>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        value={rsvpData.phone}
-                        onChange={(e) => setRSVPData({ ...rsvpData, phone: e.target.value })}
-                        placeholder="07123 456789"
-                        className="border-gray-200 focus:border-lime-500 focus:ring-lime-500"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="guests">Number of Guests *</Label>
-                      <Select
-                        value={rsvpData.guests}
-                        onValueChange={(value) => setRSVPData({ ...rsvpData, guests: value })}
-                      >
-                        <SelectTrigger className="border-gray-200 focus:border-lime-500 focus:ring-lime-500">
-                          <SelectValue placeholder="Select number of guests" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="1">1 Guest</SelectItem>
-                          <SelectItem value="2">2 Guests</SelectItem>
-                          <SelectItem value="3">3 Guests</SelectItem>
-                          <SelectItem value="4">4 Guests</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
                   <div className="space-y-2">
-                    <Label htmlFor="dietary">Dietary Restrictions</Label>
+                    <Label htmlFor="phone">Phone Number</Label>
                     <Input
-                      id="dietary"
-                      value={rsvpData.dietaryRestrictions}
-                      onChange={(e) => setRSVPData({ ...rsvpData, dietaryRestrictions: e.target.value })}
-                      placeholder="Any allergies or dietary preferences?"
+                      id="phone"
+                      type="tel"
+                      value={rsvpData.phone}
+                      onChange={(e) => setRSVPData({ ...rsvpData, phone: e.target.value })}
+                      placeholder="07123 456789"
                       className="border-gray-200 focus:border-lime-500 focus:ring-lime-500"
                     />
                   </div>
@@ -497,10 +477,6 @@ export default function WeddingRSVP() {
                 <div className="flex justify-between">
                   <span className="text-gray-600">Guest Name:</span>
                   <span className="font-semibold">{rsvpData.name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Number of Guests:</span>
-                  <span className="font-semibold">{rsvpData.guests}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">QR Code ID:</span>
