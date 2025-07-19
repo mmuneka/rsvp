@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Calendar, MapPin, Users, Download, Check, Settings, Leaf } from "lucide-react"
 import Link from "next/link"
 import { SimpleDB } from "@/lib/db"
@@ -38,7 +37,7 @@ export default function WeddingRSVP() {
 
     try {
       // Generate QR code data
-      const qrData = `WEDDING-RSVP-${Date.now()}-${rsvpData.name.replace(/\s+/g, "")}`
+      const qrData = `WEDDING-RSVP-${Date.now()}-${rsvpData.name.replace(/\\s+/g, "")}`
       setQrCode(qrData)
 
       // Save to local database
@@ -71,161 +70,85 @@ export default function WeddingRSVP() {
     const canvas = document.createElement("canvas")
     const ctx = canvas.getContext("2d")
 
-    // Set canvas size for a card format
-    canvas.width = 600
-    canvas.height = 800
+    // Set canvas size to match template's exact dimensions
+    canvas.width = 1135
+    canvas.height = 1606
 
     if (ctx) {
-      // Create clean white background
-      ctx.fillStyle = "#ffffff"
-      ctx.fillRect(0, 0, 600, 800)
+      // Load the template image
+      const templateImage = new Image()
+      templateImage.onload = () => {
+        // Draw the template image
+        ctx.drawImage(templateImage, 0, 0, canvas.width, canvas.height)
+        
+        // Add guest information at exact coordinates
+        ctx.fillStyle = "#4B5563" // Gray text color
+        ctx.textAlign = "left"
+        
+        // Set font to Poppins Medium 26px for all text
+        ctx.font = "500 26px 'Poppins', sans-serif"
+        
+        // Name at x251, y1328
+        ctx.fillText(`${rsvpData.name}`, 251, 1356.5)
+        
+        // Email at x251, y1388
+        ctx.fillText(`${rsvpData.email}`, 251, 1416.5)
+        
+        // Phone at x265, y1448
+        if (rsvpData.phone) {
+          ctx.fillText(`${rsvpData.phone}`, 265, 1476.5)
+        }
+        
+        // Generate QR code
+        ctx.fillStyle = "#000000"
+        const qrSize = 237
+        const qrX = 827
+        const qrY = 1289
+        const cellSize = qrSize / 21
 
-      // Draw eucalyptus leaves decoration (simplified botanical design)
-      const drawLeaf = (x: number, y: number, width: number, height: number, rotation = 0) => {
-        ctx.save()
-        ctx.translate(x, y)
-        ctx.rotate(rotation)
+        // QR code pattern
+        const qrPattern = [
+          [1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1],
+          [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+          [1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1],
+          [1, 0, 1, 1, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1],
+          [1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1],
+          [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+          [1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1],
+          [0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0],
+          [1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1],
+          [0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0],
+          [1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0],
+          [1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1],
+          [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0],
+          [1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1],
+          [1, 0, 1, 1, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0],
+          [1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1],
+          [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0],
+          [1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1],
+        ]
 
-        // Create leaf gradient
-        const leafGradient = ctx.createLinearGradient(-width / 2, -height / 2, width / 2, height / 2)
-        leafGradient.addColorStop(0, "#9ca3af") // gray-400
-        leafGradient.addColorStop(0.5, "#84cc16") // lime-500
-        leafGradient.addColorStop(1, "#65a30d") // lime-600
-
-        ctx.fillStyle = leafGradient
-        ctx.beginPath()
-        ctx.ellipse(0, 0, width / 2, height / 2, 0, 0, 2 * Math.PI)
-        ctx.fill()
-        ctx.restore()
-      }
-
-      // Draw botanical decoration in top right
-      drawLeaf(480, 80, 30, 60, 0.3)
-      drawLeaf(510, 110, 25, 50, -0.2)
-      drawLeaf(450, 120, 28, 55, 0.8)
-      drawLeaf(520, 140, 22, 45, -0.5)
-
-      // Draw stem
-      ctx.strokeStyle = "#84cc16"
-      ctx.lineWidth = 2
-      ctx.beginPath()
-      ctx.moveTo(460, 90)
-      ctx.quadraticCurveTo(480, 110, 500, 130)
-      ctx.quadraticCurveTo(510, 140, 520, 155)
-      ctx.stroke()
-
-      // Couple names - large, elegant typography
-      ctx.fillStyle = "#1f2937" // gray-800
-      ctx.font = "bold 48px serif"
-      ctx.textAlign = "center"
-      ctx.letterSpacing = "3px"
-      ctx.fillText("YVONNE", 300, 120)
-
-      ctx.font = "bold 36px serif"
-      ctx.fillText("&", 300, 160)
-
-      ctx.font = "bold 48px serif"
-      ctx.fillText("STEVE", 300, 200)
-
-      // Invitation text
-      ctx.font = "16px sans-serif"
-      ctx.fillStyle = "#4b5563" // gray-600
-      ctx.textAlign = "center"
-      ctx.fillText("TOGETHER WITH THEIR FAMILIES", 300, 260)
-      ctx.fillText("REQUEST THE PLEASURE", 300, 285)
-      ctx.fillText("OF YOUR COMPANY AT", 300, 310)
-      ctx.fillText("THE CELEBRATION OF THEIR UNION", 300, 335)
-
-      // Date and time
-      ctx.font = "20px sans-serif"
-      ctx.fillStyle = "#1f2937"
-      ctx.fillText("24TH AUGUST 2025", 300, 390)
-      ctx.fillText("1300 HRS TILL LATE", 300, 420)
-
-      // Venue information
-      ctx.font = "18px sans-serif"
-      ctx.fillStyle = "#374151"
-      ctx.fillText("MILLFIELD HALL", 300, 470)
-      ctx.fillText("BRAUNSTONE CIVIC CENTRE", 300, 495)
-      ctx.font = "16px sans-serif"
-      ctx.fillText("209 KINGSWAY, BRAUNSTONE TOWN", 300, 520)
-      ctx.fillText("LEICESTER LE3 2PP", 300, 545)
-
-      // Guest information section
-      ctx.font = "20px sans-serif"
-      ctx.fillStyle = "#1f2937"
-      ctx.fillText("Guest Information", 300, 590)
-
-      ctx.font = "16px sans-serif"
-      ctx.fillStyle = "#374151"
-      ctx.fillText(`Name: ${rsvpData.name}`, 300, 620)
-      if (rsvpData.phone) {
-        ctx.fillText(`Phone: ${rsvpData.phone}`, 300, 645)
-      }
-
-      // QR Code section
-      ctx.font = "18px sans-serif"
-      ctx.fillStyle = "#1f2937"
-      ctx.fillText("Entrance QR Code", 300, 710)
-
-      // QR Code background
-      ctx.fillStyle = "#ffffff"
-      ctx.fillRect(225, 720, 150, 150)
-      ctx.strokeStyle = "#e5e7eb"
-      ctx.lineWidth = 2
-      ctx.strokeRect(225, 720, 150, 150)
-
-      // Generate QR code pattern
-      ctx.fillStyle = "#000000"
-      const qrSize = 130
-      const cellSize = qrSize / 21
-      const startX = 235
-      const startY = 730
-
-      // QR code pattern
-      const qrPattern = [
-        [1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1],
-        [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1],
-        [1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1],
-        [1, 0, 1, 1, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1],
-        [1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1],
-        [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1],
-        [1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1],
-        [0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0],
-        [1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1],
-        [0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0],
-        [1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0],
-        [1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1],
-        [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0],
-        [1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1],
-        [1, 0, 1, 1, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0],
-        [1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1],
-        [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0],
-        [1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1],
-      ]
-
-      for (let row = 0; row < 21; row++) {
-        for (let col = 0; col < 21; col++) {
-          if (qrPattern[row] && qrPattern[row][col]) {
-            ctx.fillRect(startX + col * cellSize, startY + row * cellSize, cellSize, cellSize)
+        for (let row = 0; row < 21; row++) {
+          for (let col = 0; col < 21; col++) {
+            if (qrPattern[row] && qrPattern[row][col]) {
+              ctx.fillRect(qrX + col * cellSize, qrY + row * cellSize, cellSize, cellSize)
+            }
           }
         }
+
+        // Download the card
+        const link = document.createElement("a")
+        link.download = `wedding-invitation-${rsvpData.name.replace(/\\s+/g, "-")}.png`
+        link.href = canvas.toDataURL("image/png", 1.0)
+        link.click()
       }
-
-      // Add subtle border
-      ctx.strokeStyle = "#e5e7eb"
-      ctx.lineWidth = 1
-      ctx.strokeRect(20, 20, 560, 760)
+      
+      // Set the source of the image to the template in the public folder
+      templateImage.src = "/template.png"
     }
-
-    // Download the card
-    const link = document.createElement("a")
-    link.download = `wedding-invitation-${rsvpData.name.replace(/\s+/g, "-")}.png`
-    link.href = canvas.toDataURL("image/png", 1.0)
-    link.click()
   }
 
   if (currentStep === "landing") {

@@ -110,14 +110,6 @@ export default function AdminDashboard() {
             <Button 
               variant="outline" 
               className="flex items-center gap-2" 
-              onClick={() => router.push("/admin/guest-list")}
-            >
-              <span className="w-4 h-4">📃</span>
-              Guest List
-            </Button>
-            <Button 
-              variant="outline" 
-              className="flex items-center gap-2" 
               onClick={() => {
                 logout();
                 router.push("/admin/login");
