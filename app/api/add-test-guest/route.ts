@@ -40,14 +40,11 @@ export async function GET() {
     // Append to the file
     fs.appendFileSync(FILE_PATH, `\n${guestLine}`);
     
-      return NextResponse.json({ 
-        success: true, 
-        message: 'Test guest added successfully',
-        guest: testGuest
-      });
-    } else {
-      throw new Error('Failed to save test guest');
-    }
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Test guest added successfully',
+      guest: testGuest
+    });
   } catch (error: any) {
     console.error('Error adding test guest:', error);
     return NextResponse.json({
