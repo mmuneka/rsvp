@@ -12,6 +12,7 @@ import { SimpleDB, type Guest } from "@/lib/db"
 import { QRScanner } from "@/components/qr-scanner"
 import { useAuth } from "@/lib/auth"
 import { RouteGuard } from "@/components/route-guard"
+import { guestStore } from "@/lib/global-store"
 
 export default function AdminDashboard() {
   const [guests, setGuests] = useState<Guest[]>([])
@@ -27,7 +28,30 @@ export default function AdminDashboard() {
     const loadGuests = async () => {
       // First load local data
       const dbGuests = SimpleDB.getAllGuests()
-      setGuests(dbGuests)
+      
+      // Also get guests from our global store
+      const globalStoreGuests = guestStore.map(g => ({
+        ...g,
+        id: g.qrCode,
+        checkedIn: false,
+        rsvpDate: new Date().toISOString(),
+        guests: "1"
+      })) as Guest[];
+      
+      // Combine both sources, preferring DB guests if there are duplicates
+      const combinedGuests = [...dbGuests];
+      
+      // Add global store guests that aren't already in the DB
+      globalStoreGuests.forEach(globalGuest => {
+        const exists = combinedGuests.some(dbGuest => 
+          dbGuest.email.toLowerCase() === globalGuest.email.toLowerCase()
+        );
+        if (!exists) {
+          combinedGuests.push(globalGuest);
+        }
+      });
+      
+      setGuests(combinedGuests);
       
       try {
         // Then try to sync with server data

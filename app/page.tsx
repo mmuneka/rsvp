@@ -8,10 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Calendar, MapPin, Users, Download, Check, Settings, Leaf } from "lucide-react"
+import { Calendar, MapPin, Users, Download, Check, Leaf } from "lucide-react"
 import Link from "next/link"
 import { SimpleDB } from "@/lib/db"
 import { saveGuestToSheet } from "@/lib/sheets"
+import { guestStore, addGuest, findGuestByEmail, findGuestByPhone } from "@/lib/global-store"
 
 interface RSVPData {
   name: string
@@ -34,8 +35,10 @@ export default function WeddingRSVP() {
   
   // Check if email or phone already exists in the database
   const checkDuplicateRegistration = (email: string, phone: string): boolean => {
+    // Check both SimpleDB and our global store
     const allGuests = SimpleDB.getAllGuests()
     
+    // Check in SimpleDB
     const duplicateEmail = allGuests.find(guest => 
       guest.email.toLowerCase() === email.toLowerCase()
     )
@@ -44,12 +47,16 @@ export default function WeddingRSVP() {
       guest.phone && guest.phone.replace(/\s+/g, "") === phone.replace(/\s+/g, "")
     ) : null
     
-    if (duplicateEmail) {
+    // Also check in our global store
+    const globalDuplicateEmail = findGuestByEmail(email)
+    const globalDuplicatePhone = phone ? findGuestByPhone(phone) : undefined
+    
+    if (duplicateEmail || globalDuplicateEmail) {
       setError("This email address has already been registered.")
       return true
     }
     
-    if (duplicatePhone) {
+    if (duplicatePhone || globalDuplicatePhone) {
       setError("This phone number has already been registered.")
       return true
     }
@@ -85,8 +92,21 @@ export default function WeddingRSVP() {
       
       console.log('Saving guest data:', guestData);
       
-      // Save to local database for offline capability
-      SimpleDB.saveGuest(guestData)
+      // Save to our simple global array (this will work even when hosted)
+      addGuest({
+        name: rsvpData.name,
+        email: rsvpData.email,
+        phone: rsvpData.phone,
+        qrCode: qrData
+      });
+      
+      // Also try to save to local database for offline capability
+      try {
+        SimpleDB.saveGuest(guestData)
+      } catch (dbError) {
+        console.error("Error saving to local database:", dbError)
+        // Continue even if local save fails - data is still in global array
+      }
 
       try {
         // Save to server via API
@@ -96,12 +116,11 @@ export default function WeddingRSVP() {
         }
       } catch (serverError) {
         console.error("Error saving to server:", serverError)
-        // Continue even if server save fails - data is still in localStorage
+        // Continue even if server save fails - data is still in global array
       }
       
-      // Double-check that the guest was saved
-      const savedGuests = SimpleDB.getAllGuests();
-      console.log('Current guests after save:', savedGuests);
+      // Log the current state of our global store
+      console.log('Current guests in global store:', guestStore);
       
       setCurrentStep("confirmation")
     } catch (error) {
