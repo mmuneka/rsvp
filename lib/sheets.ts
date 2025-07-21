@@ -22,3 +22,24 @@ export async function saveGuestToSheet(guest: Guest): Promise<boolean> {
     return false;
   }
 }
+
+export async function getAllGuests(authKey: string): Promise<Guest[]> {
+  try {
+    const response = await fetch(`/api/get-guests?key=${authKey}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to retrieve guest data');
+    }
+
+    const data = await response.json();
+    return data.guests || [];
+  } catch (error) {
+    console.error('Error retrieving guest data:', error);
+    return [];
+  }
+}

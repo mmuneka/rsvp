@@ -22,11 +22,20 @@ export default function AdminDashboard() {
   const { logout } = useAuth()
   const router = useRouter()
 
-  // Load guests from database
+  // Load guests from database and sync with server
   useEffect(() => {
-    const loadGuests = () => {
+    const loadGuests = async () => {
+      // First load local data
       const dbGuests = SimpleDB.getAllGuests()
       setGuests(dbGuests)
+      
+      try {
+        // Then try to sync with server data
+        const syncedGuests = await SimpleDB.syncWithServer('wedding-admin-key')
+        setGuests(syncedGuests)
+      } catch (error) {
+        console.error('Error syncing with server:', error)
+      }
     }
 
     loadGuests()

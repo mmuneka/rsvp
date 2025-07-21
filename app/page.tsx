@@ -30,31 +30,71 @@ export default function WeddingRSVP() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [qrCode, setQrCode] = useState("")
+  const [error, setError] = useState("")
+  
+  // Check if email or phone already exists in the database
+  const checkDuplicateRegistration = (email: string, phone: string): boolean => {
+    const allGuests = SimpleDB.getAllGuests()
+    
+    const duplicateEmail = allGuests.find(guest => 
+      guest.email.toLowerCase() === email.toLowerCase()
+    )
+    
+    const duplicatePhone = phone ? allGuests.find(guest => 
+      guest.phone && guest.phone.replace(/\s+/g, "") === phone.replace(/\s+/g, "")
+    ) : null
+    
+    if (duplicateEmail) {
+      setError("This email address has already been registered.")
+      return true
+    }
+    
+    if (duplicatePhone) {
+      setError("This phone number has already been registered.")
+      return true
+    }
+    
+    return false
+  }
 
   const handleRSVPSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
+    setError("") // Clear any previous errors
+    
+    // Check for duplicate registration
+    if (checkDuplicateRegistration(rsvpData.email, rsvpData.phone)) {
+      setIsSubmitting(false)
+      return
+    }
 
     try {
       // Generate QR code data
       const qrData = `WEDDING-RSVP-${Date.now()}-${rsvpData.name.replace(/\\s+/g, "")}`
       setQrCode(qrData)
 
-      // Save to local database
-      const savedGuest = SimpleDB.saveGuest({
+      // Create guest object
+      const guestData = {
         ...rsvpData,
         qrCode: qrData,
-      })
+        id: Date.now().toString(),
+        checkedIn: false,
+        rsvpDate: new Date().toISOString(),
+        guests: "1", // Default to 1 guest
+      }
+      
+      // Save to local database for offline capability
+      SimpleDB.saveGuest(guestData)
 
       try {
-        // Save to Google Sheet
-        const sheetSaved = await saveGuestToSheet(savedGuest)
+        // Save to server via API
+        const sheetSaved = await saveGuestToSheet(guestData)
         if (!sheetSaved) {
-          console.warn('Failed to save to Google Sheet, but local save succeeded')
+          console.warn('Failed to save to server, but local save succeeded')
         }
-      } catch (sheetError) {
-        console.error("Error saving to Google Sheet:", sheetError)
-        // Continue even if Google Sheets save fails
+      } catch (serverError) {
+        console.error("Error saving to server:", serverError)
+        // Continue even if server save fails - data is still in localStorage
       }
       
       setCurrentStep("confirmation")
@@ -314,6 +354,12 @@ export default function WeddingRSVP() {
                     />
                   </div>
 
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+                      {error}
+                    </div>
+                  )}
+                  
                   <div className="flex gap-4 pt-4">
                     <Button
                       type="button"

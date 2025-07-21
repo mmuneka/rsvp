@@ -28,6 +28,42 @@ export class SimpleDB {
       return []
     }
   }
+  
+  // Sync with server data (for admin use)
+  static async syncWithServer(authKey: string): Promise<Guest[]> {
+    if (typeof window === "undefined") return []
+    
+    try {
+      // Import dynamically to avoid server-side issues
+      const { getAllGuests } = await import('./sheets')
+      const serverGuests = await getAllGuests(authKey)
+      
+      if (serverGuests && serverGuests.length > 0) {
+        // Merge with local data, preferring server data for duplicates
+        const localGuests = this.getAllGuests()
+        const mergedGuests = [...serverGuests]
+        
+        // Add local guests that aren't on the server (by email)
+        localGuests.forEach(localGuest => {
+          const exists = serverGuests.some(serverGuest => 
+            serverGuest.email.toLowerCase() === localGuest.email.toLowerCase()
+          )
+          if (!exists) {
+            mergedGuests.push(localGuest)
+          }
+        })
+        
+        // Save merged data locally
+        this.saveAllGuests(mergedGuests)
+        return mergedGuests
+      }
+      
+      return this.getAllGuests()
+    } catch (error) {
+      console.error("Error syncing with server:", error)
+      return this.getAllGuests()
+    }
+  }
 
   static saveGuest(guest: Omit<Guest, "id" | "checkedIn" | "rsvpDate">): Guest {
     const guests = this.getAllGuests()
