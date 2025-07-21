@@ -1,5 +1,7 @@
 "use client"
 
+import { MemoryStore } from './memory-store';
+
 export interface Guest {
   id: string
   name: string
@@ -18,14 +20,14 @@ const DB_KEY = "wedding_guests_db"
 
 export class SimpleDB {
   static getAllGuests(): Guest[] {
-    if (typeof window === "undefined") return []
+    if (typeof window === "undefined") return MemoryStore.getGuests()
 
     try {
       const data = localStorage.getItem(DB_KEY)
-      return data ? JSON.parse(data) : []
+      return data ? JSON.parse(data) : MemoryStore.getGuests()
     } catch (error) {
       console.error("Error reading from database:", error)
-      return []
+      return MemoryStore.getGuests()
     }
   }
   
@@ -77,6 +79,13 @@ export class SimpleDB {
 
     guests.push(newGuest)
     this.saveAllGuests(guests)
+    
+    // Also save to memory store as a fallback
+    MemoryStore.addGuest(newGuest)
+    
+    // Log the guest data to verify it's being saved
+    console.log('Saving guest:', newGuest);
+    
     return newGuest
   }
 
@@ -88,12 +97,23 @@ export class SimpleDB {
 
     guests[index] = { ...guests[index], ...updates }
     this.saveAllGuests(guests)
+    
+    // Also update in memory store
+    MemoryStore.updateGuest(id, updates);
+    
     return guests[index]
   }
 
   static findGuestByQRCode(qrCode: string): Guest | null {
     const guests = this.getAllGuests()
-    return guests.find((g) => g.qrCode === qrCode) || null
+    const guest = guests.find((g) => g.qrCode === qrCode);
+    
+    // If not found in localStorage, try memory store
+    if (!guest) {
+      return MemoryStore.findGuestByQRCode(qrCode);
+    }
+    
+    return guest || null
   }
 
   static checkInGuest(qrCode: string): { success: boolean; guest?: Guest; message: string } {
@@ -125,9 +145,19 @@ export class SimpleDB {
 
   private static saveAllGuests(guests: Guest[]): void {
     try {
-      localStorage.setItem(DB_KEY, JSON.stringify(guests))
+      if (typeof window !== "undefined") {
+        localStorage.setItem(DB_KEY, JSON.stringify(guests))
+        console.log(`Saved ${guests.length} guests to localStorage`);
+      } else {
+        // If localStorage is not available, update the memory store
+        guests.forEach(guest => MemoryStore.addGuest(guest));
+        console.log(`Saved ${guests.length} guests to memory store`);
+      }
     } catch (error) {
       console.error("Error saving to database:", error)
+      // On error, update the memory store
+      guests.forEach(guest => MemoryStore.addGuest(guest));
+      console.log(`Saved ${guests.length} guests to memory store after localStorage error`);
     }
   }
 

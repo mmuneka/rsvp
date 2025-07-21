@@ -32,7 +32,13 @@ const readGuests = (): Guest[] => {
 const writeGuests = (guests: Guest[]) => {
   try {
     ensureDataDir();
+    // Make sure the data directory exists before writing
+    const dataDir = path.join(process.cwd(), 'data');
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
     fs.writeFileSync(DATA_FILE, JSON.stringify(guests, null, 2));
+    console.log(`Successfully wrote ${guests.length} guests to ${DATA_FILE}`);
     return true;
   } catch (error) {
     console.error('Error writing guests file:', error);

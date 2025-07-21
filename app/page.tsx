@@ -83,6 +83,8 @@ export default function WeddingRSVP() {
         guests: "1", // Default to 1 guest
       }
       
+      console.log('Saving guest data:', guestData);
+      
       // Save to local database for offline capability
       SimpleDB.saveGuest(guestData)
 
@@ -96,6 +98,10 @@ export default function WeddingRSVP() {
         console.error("Error saving to server:", serverError)
         // Continue even if server save fails - data is still in localStorage
       }
+      
+      // Double-check that the guest was saved
+      const savedGuests = SimpleDB.getAllGuests();
+      console.log('Current guests after save:', savedGuests);
       
       setCurrentStep("confirmation")
     } catch (error) {
@@ -194,15 +200,6 @@ export default function WeddingRSVP() {
   if (currentStep === "landing") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-lime-50 to-emerald-50">
-        {/* Admin Link */}
-        <div className="absolute top-4 right-4">
-          <Link href="/admin">
-            <Button variant="outline" size="sm" className="flex items-center gap-2 bg-white/80 backdrop-blur-sm">
-              <Settings className="w-4 h-4" />
-              Admin
-            </Button>
-          </Link>
-        </div>
 
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto text-center">
