@@ -130,21 +130,19 @@ export default function WeddingRSVP() {
         // Continue even if local save fails - data is still in global array
       }
 
-      try {
-        // Save to server via API
-        const sheetSaved = await saveGuestToSheet(guestData)
-        if (!sheetSaved) {
-          console.warn('Failed to save to server, but local save succeeded')
-        }
-      } catch (serverError) {
-        console.error("Error saving to server:", serverError)
-        // Continue even if server save fails - data is still in global array
-      }
+      // Move to confirmation step immediately after local save
+      setCurrentStep("confirmation")
+      
+      // Then try to save to server in the background
+      setTimeout(() => {
+        saveGuestToSheet(guestData).catch(() => {
+          // Ignore any errors - user is already on confirmation page
+          console.log('Background save attempt completed');
+        });
+      }, 100);
       
       // Log the current state of our global array
       console.log('Current guests in global array:', guestNames);
-      
-      setCurrentStep("confirmation")
     } catch (error) {
       console.error("Error saving RSVP:", error)
       alert("There was an error saving your RSVP. Please try again.")

@@ -4,7 +4,8 @@ import { Guest } from './db';
 export async function getGuestsCollection() {
   try {
     const client = await clientPromise;
-    const db = client.db('weddingrsvpDb'); // Match the database name used in .env.local
+    // Use weddingrsvpDB with uppercase DB to match the existing database
+    const db = client.db('weddingrsvpDB');
     return db.collection<Guest>('guests');
   } catch (error) {
     console.error('MongoDB connection error:', error);
