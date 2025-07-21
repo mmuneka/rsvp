@@ -1,50 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
 import { Guest } from '@/lib/db';
-
-const DATA_FILE = path.join(process.cwd(), 'data', 'guests.json');
-
-// Ensure data directory exists
-const ensureDataDir = () => {
-  const dataDir = path.join(process.cwd(), 'data');
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-  }
-};
-
-// Read existing guests
-const readGuests = (): Guest[] => {
-  try {
-    ensureDataDir();
-    if (!fs.existsSync(DATA_FILE)) {
-      return [];
-    }
-    const data = fs.readFileSync(DATA_FILE, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    console.error('Error reading guests file:', error);
-    return [];
-  }
-};
-
-// Write guests to file
-const writeGuests = (guests: Guest[]) => {
-  try {
-    ensureDataDir();
-    // Make sure the data directory exists before writing
-    const dataDir = path.join(process.cwd(), 'data');
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
-    }
-    fs.writeFileSync(DATA_FILE, JSON.stringify(guests, null, 2));
-    console.log(`Successfully wrote ${guests.length} guests to ${DATA_FILE}`);
-    return true;
-  } catch (error) {
-    console.error('Error writing guests file:', error);
-    return false;
-  }
-};
+import { saveGuest, findGuestByEmail, findGuestByPhone } from '@/lib/guest-model';
 
 export async function POST(request: NextRequest) {
   try {
@@ -58,11 +14,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check for duplicates
-    const guests = readGuests();
-    const duplicateEmail = guests.find(g => g.email.toLowerCase() === guest.email.toLowerCase());
-    const duplicatePhone = guest.phone ? guests.find(g => 
-      g.phone && g.phone.replace(/\s+/g, '') === guest.phone.replace(/\s+/g, '')
-    ) : null;
+    const duplicateEmail = await findGuestByEmail(guest.email);
+    const duplicatePhone = guest.phone ? await findGuestByPhone(guest.phone) : null;
 
     if (duplicateEmail) {
       return NextResponse.json(
@@ -78,9 +31,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Add guest to list and save
-    guests.push(guest);
-    const saved = writeGuests(guests);
+    // Save guest to MongoDB
+    const saved = await saveGuest(guest);
 
     if (!saved) {
       return NextResponse.json(

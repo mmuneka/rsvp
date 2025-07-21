@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
 import { Guest } from '@/lib/db';
-
-const DATA_FILE = path.join(process.cwd(), 'data', 'guests.json');
+import { getAllGuests } from '@/lib/guest-model';
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,13 +16,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Read guests file
-    if (!fs.existsSync(DATA_FILE)) {
-      return NextResponse.json({ success: true, guests: [] });
-    }
-
-    const data = fs.readFileSync(DATA_FILE, 'utf8');
-    const guests: Guest[] = JSON.parse(data);
+    // Get guests from MongoDB
+    const guests = await getAllGuests();
 
     return NextResponse.json({ success: true, guests });
   } catch (error) {
