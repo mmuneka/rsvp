@@ -12,7 +12,7 @@ import { SimpleDB, type Guest } from "@/lib/db"
 import { QRScanner } from "@/components/qr-scanner"
 import { useAuth } from "@/lib/auth"
 import { RouteGuard } from "@/components/route-guard"
-import { guestStore } from "@/lib/global-store"
+import { guestNames } from "../names"
 
 export default function AdminDashboard() {
   const [guests, setGuests] = useState<Guest[]>([])
@@ -29,10 +29,14 @@ export default function AdminDashboard() {
       // First load local data
       const dbGuests = SimpleDB.getAllGuests()
       
-      // Also get guests from our global store
-      const globalStoreGuests = guestStore.map(g => ({
-        ...g,
-        id: g.qrCode,
+      // Also get guests from our simple global array
+      const simpleGuests = guestNames.map(g => ({
+        id: `simple-${g.name}-${Date.now()}`,
+        name: g.name,
+        email: g.email,
+        phone: g.phone || '',
+        message: '',
+        qrCode: `WEDDING-RSVP-${Date.now()}-${g.name.replace(/\s+/g, '')}`,
         checkedIn: false,
         rsvpDate: new Date().toISOString(),
         guests: "1"
@@ -41,15 +45,18 @@ export default function AdminDashboard() {
       // Combine both sources, preferring DB guests if there are duplicates
       const combinedGuests = [...dbGuests];
       
-      // Add global store guests that aren't already in the DB
-      globalStoreGuests.forEach(globalGuest => {
+      // Add simple guests that aren't already in the DB
+      simpleGuests.forEach(simpleGuest => {
         const exists = combinedGuests.some(dbGuest => 
-          dbGuest.email.toLowerCase() === globalGuest.email.toLowerCase()
+          dbGuest.email.toLowerCase() === simpleGuest.email.toLowerCase()
         );
         if (!exists) {
-          combinedGuests.push(globalGuest);
+          combinedGuests.push(simpleGuest);
         }
       });
+      
+      console.log('Combined guests:', combinedGuests);
+      console.log('Simple guests:', simpleGuests);
       
       setGuests(combinedGuests);
       

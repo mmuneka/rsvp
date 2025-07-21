@@ -12,7 +12,7 @@ import { Calendar, MapPin, Users, Download, Check, Leaf } from "lucide-react"
 import Link from "next/link"
 import { SimpleDB } from "@/lib/db"
 import { saveGuestToSheet } from "@/lib/sheets"
-import { guestStore, addGuest, findGuestByEmail, findGuestByPhone } from "@/lib/global-store"
+import { guestNames, addGuestName } from "./names"
 
 interface RSVPData {
   name: string
@@ -35,7 +35,7 @@ export default function WeddingRSVP() {
   
   // Check if email or phone already exists in the database
   const checkDuplicateRegistration = (email: string, phone: string): boolean => {
-    // Check both SimpleDB and our global store
+    // Check SimpleDB
     const allGuests = SimpleDB.getAllGuests()
     
     // Check in SimpleDB
@@ -47,9 +47,14 @@ export default function WeddingRSVP() {
       guest.phone && guest.phone.replace(/\s+/g, "") === phone.replace(/\s+/g, "")
     ) : null
     
-    // Also check in our global store
-    const globalDuplicateEmail = findGuestByEmail(email)
-    const globalDuplicatePhone = phone ? findGuestByPhone(phone) : undefined
+    // Also check in our simple global array
+    const globalDuplicateEmail = guestNames.find(guest => 
+      guest.email.toLowerCase() === email.toLowerCase()
+    )
+    
+    const globalDuplicatePhone = phone ? guestNames.find(guest => 
+      guest.phone && guest.phone.replace(/\s+/g, "") === phone.replace(/\s+/g, "")
+    ) : undefined
     
     if (duplicateEmail || globalDuplicateEmail) {
       setError("This email address has already been registered.")
@@ -93,12 +98,7 @@ export default function WeddingRSVP() {
       console.log('Saving guest data:', guestData);
       
       // Save to our simple global array (this will work even when hosted)
-      addGuest({
-        name: rsvpData.name,
-        email: rsvpData.email,
-        phone: rsvpData.phone,
-        qrCode: qrData
-      });
+      addGuestName(rsvpData.name, rsvpData.email, rsvpData.phone);
       
       // Also try to save to local database for offline capability
       try {
@@ -119,8 +119,8 @@ export default function WeddingRSVP() {
         // Continue even if server save fails - data is still in global array
       }
       
-      // Log the current state of our global store
-      console.log('Current guests in global store:', guestStore);
+      // Log the current state of our global array
+      console.log('Current guests in global array:', guestNames);
       
       setCurrentStep("confirmation")
     } catch (error) {
