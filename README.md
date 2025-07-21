@@ -21,21 +21,33 @@ A simple wedding RSVP system with QR code check-in functionality.
    ```
    cp .env.local.example .env.local
    ```
-4. Edit `.env.local` and set a secure admin key
+4. Edit `.env.local` and set:
+   - A secure admin key
+   - Your MongoDB connection string (see MongoDB setup below)
 5. Run the development server:
    ```
    npm run dev
    ```
 
+## MongoDB Setup
+
+1. Create a free MongoDB Atlas account at [https://www.mongodb.com/cloud/atlas](https://www.mongodb.com/cloud/atlas)
+2. Create a new cluster (the free tier is sufficient)
+3. In the Security section, create a database user with read/write permissions
+4. In Network Access, add your IP address or allow access from anywhere (for development)
+5. Click "Connect" on your cluster, select "Connect your application", and copy the connection string
+6. Replace `<username>`, `<password>`, and `<dbname>` in the connection string with your credentials
+7. Add this connection string to your `.env.local` file as `MONGODB_URI`
+
 ## Deployment
 
-### Important: Server-side Storage
+### MongoDB for Data Storage
 
-This application uses server-side file storage to persist guest data. When deploying:
+This application uses MongoDB to persist guest data, which is ideal for Vercel deployment:
 
-1. Make sure the `/data` directory exists on your hosting provider
-2. Ensure the directory has write permissions for the web server
-3. The `guests.json` file will be created automatically when the first guest registers
+1. Make sure your MongoDB Atlas cluster is properly configured
+2. Set the `MONGODB_URI` environment variable in your Vercel project settings
+3. Ensure your MongoDB Atlas cluster allows connections from Vercel's IP addresses (you may need to allow access from anywhere for simplicity)
 
 ### Vercel Deployment
 

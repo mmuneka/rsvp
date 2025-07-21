@@ -69,11 +69,14 @@ export class SimpleDB {
 
   static saveGuest(guest: Omit<Guest, "id" | "checkedIn" | "rsvpDate">): Guest {
     const guests = this.getAllGuests()
+    const currentDate = new Date();
+    const formattedDate = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+    
     const newGuest: Guest = {
       ...guest,
       id: Date.now().toString(),
       checkedIn: false,
-      rsvpDate: new Date().toISOString(),
+      rsvpDate: formattedDate,
       guests: "1", // Default to 1 guest since we removed the field
     }
 
@@ -175,7 +178,7 @@ export class SimpleDB {
       if (guest.checkedIn && guest.checkedInAt) {
         lines.push(`Check-in Time: ${new Date(guest.checkedInAt).toLocaleString()}`)
       }
-      lines.push(`RSVP Date: ${new Date(guest.rsvpDate).toLocaleString()}`)
+      lines.push(`RSVP Date: ${guest.rsvpDate}`); // Already in YYYY-MM-DD format
       if (guest.dietaryRestrictions) {
         lines.push(`Dietary: ${guest.dietaryRestrictions}`)
       }
@@ -250,7 +253,7 @@ export class SimpleDB {
           ...g,
           id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
           checkedIn: false,
-          rsvpDate: new Date().toISOString(),
+          rsvpDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
         })),
       ]
 
