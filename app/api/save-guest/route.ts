@@ -33,8 +33,14 @@ export async function POST(request: NextRequest) {
 
     // Try to save guest to MongoDB, but continue even if it fails
     try {
+      console.log('Attempting to save to MongoDB on environment:', process.env.NODE_ENV);
+      console.log('MongoDB URI configured:', !!process.env.MONGODB_URI);
+      
       const saved = await saveGuest(guest);
-      if (!saved) {
+      
+      if (saved) {
+        console.log('Successfully saved guest to MongoDB:', guest.name);
+      } else {
         console.log('MongoDB save failed, but continuing with success response');
       }
     } catch (dbError) {

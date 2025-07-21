@@ -322,7 +322,7 @@ export default function WeddingRSVP() {
                 <p className="text-sm text-gray-500">Please respond by 1st August 2025</p>
                 <p className="text-sm font-medium mt-2 text-lime-700">
                   {spotsRemaining > 0 ? 
-                    `${spotsRemaining} of ${MAX_GUESTS} spots remaining` : 
+                    `${spotsRemaining} spots remaining` : 
                     "All spots have been filled"}
                 </p>
               </div>
