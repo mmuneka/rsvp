@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
     const authHeader = request.headers.get('authorization');
     
     // Check if the auth header exists and matches the admin key
-    if (!authHeader || authHeader !== `Bearer ${process.env.ADMIN_KEY}`) {
+    if (!authHeader || authHeader !== 'Bearer wedding-admin-key') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     

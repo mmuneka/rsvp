@@ -61,7 +61,7 @@ export default function AdminDashboard() {
         // Try to get MongoDB guests first
         const response = await fetch('/api/get-mongodb-guests', {
           headers: {
-            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_ADMIN_KEY || 'wedding-admin-key'}`
+            'Authorization': 'Bearer wedding-admin-key'
           }
         });
         
