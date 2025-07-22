@@ -55,13 +55,39 @@ export default function AdminDashboard() {
         }
       });
       
-      console.log('Combined guests:', combinedGuests);
-      console.log('Simple guests:', simpleGuests);
-      
       setGuests(combinedGuests);
       
       try {
-        // Then try to sync with server data
+        // Try to get MongoDB guests first
+        const response = await fetch('/api/get-mongodb-guests', {
+          headers: {
+            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_ADMIN_KEY || 'wedding-admin-key'}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.guests && Array.isArray(data.guests)) {
+            // Merge MongoDB guests with local guests, preferring MongoDB data
+            const mongoGuests = data.guests;
+            const mergedGuests = [...mongoGuests];
+            
+            // Add local guests that aren't in MongoDB
+            combinedGuests.forEach(localGuest => {
+              const exists = mongoGuests.some(mongoGuest => 
+                mongoGuest.email.toLowerCase() === localGuest.email.toLowerCase()
+              );
+              if (!exists) {
+                mergedGuests.push(localGuest);
+              }
+            });
+            
+            setGuests(mergedGuests);
+            return; // Skip the sheets sync if MongoDB worked
+          }
+        }
+        
+        // Fallback to sheets sync if MongoDB failed
         const syncedGuests = await SimpleDB.syncWithServer('wedding-admin-key')
         setGuests(syncedGuests)
       } catch (error) {
@@ -74,7 +100,7 @@ export default function AdminDashboard() {
     // Refresh every 5 seconds to catch new RSVPs
     const interval = setInterval(loadGuests, 5000)
     return () => clearInterval(interval)
-  }, [])
+  }, []
 
   const filteredGuests = guests.filter(
     (guest) =>

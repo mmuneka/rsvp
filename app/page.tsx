@@ -38,10 +38,46 @@ export default function WeddingRSVP() {
   // Get current guest count on load and when returning to landing page
   useEffect(() => {
     if (currentStep === "landing") {
-      const dbGuests = SimpleDB.getAllGuests().length
-      const totalGuests = dbGuests + guestNames.length
-      setGuestCount(totalGuests)
-      setSpotsRemaining(MAX_GUESTS - totalGuests)
+      const fetchGuestCount = async () => {
+        // First get local guests
+        const dbGuests = SimpleDB.getAllGuests().length
+        const localTotalGuests = dbGuests + guestNames.length
+        
+        // Set initial count from local data
+        setGuestCount(localTotalGuests)
+        setSpotsRemaining(MAX_GUESTS - localTotalGuests)
+        
+        try {
+          // Try to get MongoDB guest count for more accurate numbers
+          const response = await fetch('/api/get-guest-count', {
+            method: 'GET',
+            cache: 'no-store'
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (typeof data.count === 'number') {
+              // Add any guests from the global array that might not be in MongoDB yet
+              const uniqueGlobalGuests = guestNames.filter(g => {
+                // Check if this guest's email exists in the database
+                const exists = SimpleDB.getAllGuests().some(dbGuest => 
+                  dbGuest.email.toLowerCase() === g.email.toLowerCase()
+                );
+                return !exists;
+              }).length;
+              
+              const totalCount = data.count + uniqueGlobalGuests;
+              setGuestCount(totalCount);
+              setSpotsRemaining(MAX_GUESTS - totalCount);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching guest count:', error);
+          // Keep using the local count if the API fails
+        }
+      };
+      
+      fetchGuestCount();
     }
   }, [currentStep])
   
