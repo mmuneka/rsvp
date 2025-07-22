@@ -100,7 +100,7 @@ export default function AdminDashboard() {
     // Refresh every 5 seconds to catch new RSVPs
     const interval = setInterval(loadGuests, 5000)
     return () => clearInterval(interval)
-  }, []
+  }, [])
 
   const filteredGuests = guests.filter(
     (guest) =>
